@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalIcon, MapPin, Plus, List } from 'lucide-react';
 import { Task, CalendarDateState } from '../types';
-import { MONTH_NAMES, DAYS_OF_WEEK } from '../constants';
+import { MONTH_NAMES, DAYS_OF_WEEK, STATUS_COLORS } from '../constants';
 
 interface CalendarBoardProps {
   tasks: Task[];
@@ -12,29 +12,44 @@ export const CalendarBoard: React.FC<CalendarBoardProps> = ({ tasks }) => {
     currentDate: new Date(),
     viewMode: 'month'
   });
+  const [animating, setAnimating] = useState(false);
 
-  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+  // Trigger animation on month change
+  const changeDate = (modifier: (d: Date) => void) => {
+    setAnimating(true);
+    setTimeout(() => {
+      const newDate = new Date(calendarState.currentDate);
+      modifier(newDate);
+      setCalendarState({ ...calendarState, currentDate: newDate });
+      setAnimating(false);
+    }, 200); // Wait for exit animation
+  };
 
   const handlePrev = () => {
-    const newDate = new Date(calendarState.currentDate);
-    if (calendarState.viewMode === 'day') newDate.setDate(newDate.getDate() - 1);
-    if (calendarState.viewMode === 'month') newDate.setMonth(newDate.getMonth() - 1);
-    if (calendarState.viewMode === 'year') newDate.setFullYear(newDate.getFullYear() - 1);
-    setCalendarState({ ...calendarState, currentDate: newDate });
+    changeDate((d) => {
+       if (calendarState.viewMode === 'day') d.setDate(d.getDate() - 1);
+       if (calendarState.viewMode === 'month') d.setMonth(d.getMonth() - 1);
+       if (calendarState.viewMode === 'year') d.setFullYear(d.getFullYear() - 1);
+    });
   };
 
   const handleNext = () => {
-    const newDate = new Date(calendarState.currentDate);
-    if (calendarState.viewMode === 'day') newDate.setDate(newDate.getDate() + 1);
-    if (calendarState.viewMode === 'month') newDate.setMonth(newDate.getMonth() + 1);
-    if (calendarState.viewMode === 'year') newDate.setFullYear(newDate.getFullYear() + 1);
-    setCalendarState({ ...calendarState, currentDate: newDate });
+    changeDate((d) => {
+       if (calendarState.viewMode === 'day') d.setDate(d.getDate() + 1);
+       if (calendarState.viewMode === 'month') d.setMonth(d.getMonth() + 1);
+       if (calendarState.viewMode === 'year') d.setFullYear(d.getFullYear() + 1);
+    });
   };
 
   const jumpToToday = () => {
-    setCalendarState({ ...calendarState, currentDate: new Date() });
+    changeDate((d) => {
+       const now = new Date();
+       d.setFullYear(now.getFullYear(), now.getMonth(), now.getDate());
+    });
   };
+
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
   const renderMonthView = () => {
     const year = calendarState.currentDate.getFullYear();
@@ -45,42 +60,78 @@ export const CalendarBoard: React.FC<CalendarBoardProps> = ({ tasks }) => {
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
     return (
-      <div className="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded-lg overflow-hidden shadow-sm">
-        {DAYS_OF_WEEK.map(day => (
-          <div key={day} className="bg-slate-50 p-2 text-center text-xs font-semibold text-slate-500 uppercase">
-            {day}
-          </div>
-        ))}
-        {blanks.map((_, i) => (
-          <div key={`blank-${i}`} className="bg-white min-h-[100px] p-2" />
-        ))}
-        {days.map(day => {
-          const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          const dayTasks = tasks.filter(t => t.date === dateStr);
-          const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
-
-          return (
-            <div 
-              key={day} 
-              className={`bg-white min-h-[100px] p-2 hover:bg-blue-50 transition-colors cursor-pointer group flex flex-col gap-1 ${isToday ? 'bg-blue-50/50' : ''}`}
-              onClick={() => setCalendarState({ currentDate: new Date(year, month, day), viewMode: 'day' })}
-            >
-              <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-blue-600 text-white' : 'text-slate-700'}`}>
-                {day}
-              </span>
-              <div className="flex flex-col gap-1 mt-1">
-                {dayTasks.slice(0, 3).map(task => (
-                  <div key={task.id} className="text-xs truncate px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700 border-l-2 border-indigo-500">
-                    {task.title}
-                  </div>
-                ))}
-                {dayTasks.length > 3 && (
-                  <span className="text-xs text-slate-400 pl-1">+ {dayTasks.length - 3} more</span>
-                )}
-              </div>
+      <div className={`transition-all duration-300 ${animating ? 'opacity-0 translate-x-10 scale-95' : 'opacity-100 translate-x-0 scale-100'}`}>
+        <div className="grid grid-cols-7 mb-2">
+          {DAYS_OF_WEEK.map(day => (
+            <div key={day} className="text-center text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest py-2">
+              {day}
             </div>
-          );
-        })}
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-2 lg:gap-3">
+          {blanks.map((_, i) => (
+            <div key={`blank-${i}`} className="min-h-[100px] rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 border border-transparent" />
+          ))}
+          {days.map(day => {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayTasks = tasks.filter(t => t.date === dateStr);
+            const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+            const hasTasks = dayTasks.length > 0;
+
+            return (
+              <div 
+                key={day} 
+                className={`
+                  relative min-h-[100px] p-3 rounded-2xl border transition-all duration-300 cursor-pointer group flex flex-col justify-between overflow-hidden
+                  ${isToday 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/40 border-blue-500 transform scale-[1.02]' 
+                    : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg hover:-translate-y-1'
+                  }
+                `}
+                onClick={() => setCalendarState({ currentDate: new Date(year, month, day), viewMode: 'day' })}
+              >
+                {/* Background Decoration for Today */}
+                {isToday && <div className="absolute -right-4 -top-4 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>}
+
+                <div className="flex justify-between items-start">
+                  <span className={`text-sm font-bold w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-white/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'}`}>
+                    {day}
+                  </span>
+                  {hasTasks && (
+                     <span className={`text-[10px] font-bold px-1.5 rounded ${isToday ? 'bg-white text-blue-600' : 'bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300'}`}>
+                       {dayTasks.length}
+                     </span>
+                  )}
+                </div>
+
+                <div className="space-y-1 mt-2 relative z-10">
+                  {dayTasks.slice(0, 2).map(task => (
+                    <div 
+                      key={task.id} 
+                      className={`text-[10px] truncate px-1.5 py-0.5 rounded font-medium backdrop-blur-sm ${
+                        isToday 
+                          ? 'bg-white/20 text-white' 
+                          : `${STATUS_COLORS[task.status].replace('border-', '')} border-l-2 bg-opacity-40`
+                      }`}
+                    >
+                      {task.title}
+                    </div>
+                  ))}
+                  {dayTasks.length > 2 && (
+                    <div className={`text-[10px] text-center ${isToday ? 'text-white/70' : 'text-slate-400'}`}>
+                      + {dayTasks.length - 2} more
+                    </div>
+                  )}
+                </div>
+                
+                {/* Hover Add Button */}
+                <div className={`absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ${isToday ? 'text-white' : 'text-slate-400'}`}>
+                   <Plus size={14} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   };
@@ -90,36 +141,67 @@ export const CalendarBoard: React.FC<CalendarBoardProps> = ({ tasks }) => {
     const dayTasks = tasks.filter(t => t.date === dateStr);
 
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto">
-        <h3 className="text-lg font-semibold text-slate-700 mb-4 flex items-center gap-2">
-          Tasks for {calendarState.currentDate.toLocaleDateString()}
-          <span className="text-sm font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
-            {dayTasks.length}
-          </span>
-        </h3>
-        {dayTasks.length === 0 ? (
-          <div className="text-center py-12 text-slate-400">No tasks scheduled for this day.</div>
-        ) : (
-          <div className="space-y-3">
-            {dayTasks.map(task => (
-              <div key={task.id} className="p-4 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-medium text-slate-900">{task.title}</h4>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold border ${
-                     task.status === 'DONE' ? 'bg-green-100 text-green-700 border-green-200' :
-                     task.status === 'ON-GOING' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                     task.status === 'CANCELED' ? 'bg-red-100 text-red-700 border-red-200' :
-                     'bg-yellow-100 text-yellow-700 border-yellow-200'
-                  }`}>
-                    {task.status}
-                  </span>
-                </div>
-                {task.description && <p className="text-sm text-slate-600 mt-1">{task.description}</p>}
-                <div className="mt-2 text-xs text-slate-400">Due: {task.date}</div>
+      <div className={`max-w-3xl mx-auto transition-all duration-300 ${animating ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
+        <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+           <div className="bg-slate-50 dark:bg-slate-800/50 p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+              <div>
+                 <h3 className="text-2xl font-bold text-slate-800 dark:text-white">{calendarState.currentDate.toLocaleDateString(undefined, {weekday: 'long'})}</h3>
+                 <p className="text-slate-500 dark:text-slate-400">{calendarState.currentDate.toLocaleDateString(undefined, {month: 'long', day: 'numeric', year: 'numeric'})}</p>
               </div>
-            ))}
-          </div>
-        )}
+              <div className="bg-white dark:bg-slate-900 px-4 py-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 text-center">
+                 <div className="text-xs text-slate-400 uppercase font-bold">Total Tasks</div>
+                 <div className="text-2xl font-black text-blue-600 dark:text-blue-400">{dayTasks.length}</div>
+              </div>
+           </div>
+
+           <div className="p-6 min-h-[400px]">
+             {dayTasks.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-slate-400 py-20 space-y-4">
+                   <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                      <List size={24} />
+                   </div>
+                   <p>No tasks scheduled. Enjoy your day!</p>
+                </div>
+             ) : (
+                <div className="space-y-4">
+                   {dayTasks.map((task, idx) => (
+                      <div 
+                        key={task.id} 
+                        className="flex items-start gap-4 p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all group animate-slide-up"
+                        style={{animationDelay: `${idx * 100}ms`}}
+                      >
+                         <div className={`mt-1 w-3 h-3 rounded-full shrink-0 ${
+                            task.status === 'DONE' ? 'bg-green-500' : 
+                            task.status === 'ON-GOING' ? 'bg-blue-500' : 'bg-slate-300'
+                         }`} />
+                         <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                               <h4 className={`text-lg font-bold ${
+                                 task.status === 'DONE' 
+                                   ? 'text-slate-400 dark:text-slate-500' 
+                                   : task.status === 'CANCELED' 
+                                     ? 'text-slate-400 dark:text-slate-500 line-through'
+                                     : 'text-slate-800 dark:text-white'
+                               }`}>
+                                 {task.title}
+                               </h4>
+                               <span className={`text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider ${STATUS_COLORS[task.status]}`}>
+                                 {task.status}
+                               </span>
+                            </div>
+                            <p className="text-slate-500 dark:text-slate-400 mt-1">{task.description}</p>
+                            {task.location && (
+                               <div className="flex items-center gap-1 text-xs text-slate-400 mt-2">
+                                  <MapPin size={12} /> {task.location}
+                               </div>
+                            )}
+                         </div>
+                      </div>
+                   ))}
+                </div>
+             )}
+           </div>
+        </div>
       </div>
     );
   };
@@ -127,7 +209,7 @@ export const CalendarBoard: React.FC<CalendarBoardProps> = ({ tasks }) => {
   const renderYearView = () => {
     const year = calendarState.currentDate.getFullYear();
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 transition-all duration-300 ${animating ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
         {MONTH_NAMES.map((monthName, index) => {
           const count = tasks.filter(t => {
             const d = new Date(t.date);
@@ -138,11 +220,22 @@ export const CalendarBoard: React.FC<CalendarBoardProps> = ({ tasks }) => {
             <div 
               key={monthName} 
               onClick={() => setCalendarState({ currentDate: new Date(year, index, 1), viewMode: 'month' })}
-              className="bg-white p-4 rounded-lg border border-slate-200 hover:border-blue-400 cursor-pointer hover:shadow-md transition-all"
+              className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-xl hover:-translate-y-1 cursor-pointer transition-all group relative overflow-hidden"
             >
-              <div className="font-bold text-slate-700 mb-2">{monthName}</div>
-              <div className="text-3xl font-light text-blue-600">{count}</div>
-              <div className="text-xs text-slate-400 mt-1">Tasks scheduled</div>
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                 <CalIcon size={60} />
+              </div>
+              
+              <div className="font-bold text-xl text-slate-700 dark:text-slate-200 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{monthName}</div>
+              
+              <div className="flex items-end gap-2">
+                 <span className="text-4xl font-black text-slate-800 dark:text-white">{count}</span>
+                 <span className="text-sm text-slate-400 mb-1 font-medium">tasks</span>
+              </div>
+              
+              <div className="mt-4 w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                 <div className="h-full bg-blue-500 rounded-full" style={{width: `${Math.min(count * 5, 100)}%`}}></div>
+              </div>
             </div>
           );
         })}
@@ -151,18 +244,31 @@ export const CalendarBoard: React.FC<CalendarBoardProps> = ({ tasks }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-10">
       {/* Calendar Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <div className="flex items-center gap-2 bg-slate-100 rounded-lg p-1">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-2 pl-4 pr-2 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-colors sticky top-0 z-20">
+        <div className="flex items-center gap-4">
+           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              <button onClick={handlePrev} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition-all shadow-sm"><ChevronLeft size={18} /></button>
+              <button onClick={handleNext} className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-600 dark:text-slate-300 transition-all shadow-sm"><ChevronRight size={18} /></button>
+           </div>
+           <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight min-w-[200px]">
+              {calendarState.viewMode === 'day' && calendarState.currentDate.toLocaleDateString(undefined, {month: 'long', day: 'numeric'})}
+              {calendarState.viewMode === 'month' && MONTH_NAMES[calendarState.currentDate.getMonth()]}
+              {calendarState.viewMode === 'year' && "Year Overview"}
+              <span className="text-slate-400 dark:text-slate-600 ml-2 font-medium">{calendarState.currentDate.getFullYear()}</span>
+           </h2>
+        </div>
+
+        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl p-1.5">
           {['day', 'month', 'year'].map((mode) => (
             <button
               key={mode}
               onClick={() => setCalendarState({ ...calendarState, viewMode: mode as any })}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
                 calendarState.viewMode === mode 
-                ? 'bg-white text-blue-600 shadow-sm' 
-                : 'text-slate-500 hover:text-slate-700'
+                ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-md transform scale-105' 
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               } capitalize`}
             >
               {mode}
@@ -170,30 +276,16 @@ export const CalendarBoard: React.FC<CalendarBoardProps> = ({ tasks }) => {
           ))}
         </div>
 
-        <div className="flex items-center gap-4">
-          <button onClick={handlePrev} className="p-2 hover:bg-slate-100 rounded-full text-slate-600">
-            <ChevronLeft size={20} />
-          </button>
-          <div className="text-lg font-bold text-slate-800 min-w-[150px] text-center">
-            {calendarState.viewMode === 'day' && calendarState.currentDate.toLocaleDateString()}
-            {calendarState.viewMode === 'month' && `${MONTH_NAMES[calendarState.currentDate.getMonth()]} ${calendarState.currentDate.getFullYear()}`}
-            {calendarState.viewMode === 'year' && calendarState.currentDate.getFullYear()}
-          </div>
-          <button onClick={handleNext} className="p-2 hover:bg-slate-100 rounded-full text-slate-600">
-            <ChevronRight size={20} />
-          </button>
-        </div>
-
         <button 
           onClick={jumpToToday}
-          className="text-sm font-medium text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-lg border border-transparent hover:border-blue-100 transition-colors"
+          className="hidden md:block text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-5 py-2.5 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-95"
         >
-          Today
+          Jump to Today
         </button>
       </div>
 
       {/* View Content */}
-      <div className="animate-in fade-in duration-300">
+      <div className="min-h-[500px]">
         {calendarState.viewMode === 'month' && renderMonthView()}
         {calendarState.viewMode === 'day' && renderDayView()}
         {calendarState.viewMode === 'year' && renderYearView()}

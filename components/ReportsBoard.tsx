@@ -88,8 +88,8 @@ export const ReportsBoard: React.FC<ReportsBoardProps> = ({ tasks }) => {
 
   // Export Logic
   const exportToCSV = () => {
-    const headers = ['ID', 'Title', 'Description', 'Date', 'Status', 'Remarks'];
-    const rows = displayedTasks.map(t => [t.id, `"${t.title}"`, `"${t.description}"`, t.date, t.status, `"${t.remarks}"`]);
+    const headers = ['ID', 'Title', 'Location', 'Description', 'Date', 'Status', 'Remarks'];
+    const rows = displayedTasks.map(t => [t.id, `"${t.title}"`, `"${t.location || ''}"`, `"${t.description}"`, t.date, t.status, `"${t.remarks}"`]);
     const csvContent = "data:text/csv;charset=utf-8," + 
       [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     
@@ -119,10 +119,11 @@ export const ReportsBoard: React.FC<ReportsBoardProps> = ({ tasks }) => {
         <h1>Task Report - ${selectedPeriod}</h1>
         <h3>Period: ${getDateRangeString()}</h3>
         <table>
-          <tr><th>Title</th><th>Date</th><th>Status</th><th>Description</th><th>Remarks</th></tr>
+          <tr><th>Title</th><th>Location</th><th>Date</th><th>Status</th><th>Description</th><th>Remarks</th></tr>
           ${displayedTasks.map(t => `
             <tr>
               <td>${t.title}</td>
+              <td>${t.location || '-'}</td>
               <td>${t.date}</td>
               <td class="status">${t.status}</td>
               <td>${t.description}</td>
@@ -146,20 +147,22 @@ export const ReportsBoard: React.FC<ReportsBoardProps> = ({ tasks }) => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header and Controls */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 no-print">
-        <h2 className="text-lg font-bold text-slate-800 mb-4">Generate Report</h2>
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 no-print transition-colors">
+        <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Generate Report</h2>
         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
           <div className="flex flex-wrap items-center gap-4">
             {/* Period Selector */}
-            <div className="flex bg-slate-100 p-1 rounded-lg">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
               {(['DAY', 'WEEK', 'MONTH', 'YEAR'] as Period[]).map(p => (
                 <button
                   key={p}
                   onClick={() => setSelectedPeriod(p)}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                    selectedPeriod === p ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:text-slate-700'
+                    selectedPeriod === p 
+                    ? 'bg-white dark:bg-slate-600 shadow-sm text-blue-600 dark:text-blue-300' 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                   }`}
                 >
                   {p}
@@ -168,33 +171,33 @@ export const ReportsBoard: React.FC<ReportsBoardProps> = ({ tasks }) => {
             </div>
 
             {/* Reference Date Picker */}
-            <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-lg">
+            <div className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-2 rounded-lg">
               <Calendar size={16} className="text-slate-400" />
               <input 
                 type="date"
                 value={referenceDateStr}
                 onChange={(e) => setReferenceDateStr(e.target.value)}
-                className="text-sm text-slate-700 outline-none bg-transparent font-medium"
+                className="text-sm text-slate-700 dark:text-slate-300 outline-none bg-transparent font-medium"
               />
             </div>
           </div>
 
           <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-            <button onClick={exportToCSV} className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg border border-green-200 transition-colors whitespace-nowrap">
+            <button onClick={exportToCSV} className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900/40 rounded-lg border border-green-200 dark:border-green-800 transition-colors whitespace-nowrap">
               <FileSpreadsheet size={18} /> Excel (CSV)
             </button>
-            <button onClick={exportToDoc} className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors whitespace-nowrap">
+            <button onClick={exportToDoc} className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-800 transition-colors whitespace-nowrap">
               <FileText size={18} /> Word
             </button>
-            <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors whitespace-nowrap">
+            <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors whitespace-nowrap">
               <Printer size={18} /> PDF / Print
             </button>
           </div>
         </div>
         
         {selectedPeriod === 'WEEK' && (
-           <div className="mt-4 flex items-start gap-2 text-sm text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-100">
-              <Info size={16} className="mt-0.5 text-blue-600 flex-shrink-0" />
+           <div className="mt-4 flex items-start gap-2 text-sm text-slate-500 dark:text-slate-400 bg-blue-50 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30">
+              <Info size={16} className="mt-0.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
               <p>Weekly reports cover <strong>Tuesday through Monday</strong> based on the selected date ({referenceDateStr}). Tasks scheduled on <strong>weekends (Saturday & Sunday)</strong> are automatically excluded from this report.</p>
            </div>
         )}
@@ -217,6 +220,7 @@ export const ReportsBoard: React.FC<ReportsBoardProps> = ({ tasks }) => {
             <thead>
               <tr className="border-b border-slate-200 text-slate-500">
                 <th className="pb-3 font-medium w-1/4">Task</th>
+                <th className="pb-3 font-medium w-1/6">Location</th>
                 <th className="pb-3 font-medium w-1/6">Date</th>
                 <th className="pb-3 font-medium w-1/6">Status</th>
                 <th className="pb-3 font-medium">Description/Remarks</th>
@@ -229,6 +233,7 @@ export const ReportsBoard: React.FC<ReportsBoardProps> = ({ tasks }) => {
                     <div className="font-medium text-slate-800">{task.title}</div>
                     {task.reminder && <span className="text-[10px] bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded-full inline-block mt-1 print:border print:border-yellow-200">Reminder Set</span>}
                   </td>
+                  <td className="py-4 text-slate-600 align-top">{task.location || '-'}</td>
                   <td className="py-4 text-slate-600 align-top">{task.date}</td>
                   <td className="py-4 align-top">
                     <span className={`px-2 py-1 rounded text-xs font-bold border ${STATUS_COLORS[task.status]} print:border print:bg-transparent print:text-black`}>
