@@ -281,9 +281,9 @@ const App: React.FC = () => {
       case DashboardView.ANALYTICS:
         return <AnalyticsBoard tasks={tasks} setCurrentView={setCurrentView} />;
       case DashboardView.CALENDAR:
-        return <CalendarBoard tasks={tasks} />;
+        return <CalendarBoard tasks={tasks} setCurrentView={setCurrentView} />;
       case DashboardView.TASKS:
-        return <TaskBoard tasks={tasks} setTasks={setTasks} />;
+        return <TaskBoard tasks={tasks} setTasks={setTasks} setCurrentView={setCurrentView} />;
       case DashboardView.MEETINGS:
         return <MeetingsBoard meetings={meetings} setMeetings={setMeetings} />;
       case DashboardView.GAMES:
@@ -295,7 +295,7 @@ const App: React.FC = () => {
       case DashboardView.REPORTS:
         return <ReportsBoard tasks={tasks} />;
       default:
-        return <TaskBoard tasks={tasks} setTasks={setTasks} />;
+        return <TaskBoard tasks={tasks} setTasks={setTasks} setCurrentView={setCurrentView} />;
     }
   };
 

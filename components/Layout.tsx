@@ -51,7 +51,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
   };
 
   return (
-    <div className="flex h-full w-full bg-[#f8fafc] dark:bg-[#020617] transition-colors duration-500">
+    <div className="flex h-screen h-[100dvh] w-full bg-[#f8fafc] dark:bg-[#020617] transition-colors duration-500 overflow-hidden">
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div 
@@ -85,7 +85,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
              </div>
           )}
           
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden absolute right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white">
+          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden absolute right-4 text-slate-400 hover:text-slate-900 dark:hover:text-white p-2">
             <X size={24} />
           </button>
         </div>
@@ -132,7 +132,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
         </nav>
 
         {/* Sidebar Footer Controls */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-4">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800/50 flex flex-col gap-4 hidden md:flex">
            {/* Collapse Button */}
            <button 
              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -148,9 +148,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
       <main className="flex-1 flex flex-col h-full overflow-hidden relative">
         
         {/* Top Navbar */}
-        <header className="h-16 px-6 flex items-center justify-between bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 z-30 sticky top-0 transition-colors duration-500">
+        <header className="h-16 px-4 md:px-6 flex items-center justify-between bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 z-30 sticky top-0 transition-colors duration-500">
            <div className="flex items-center gap-4">
-             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
+             <button onClick={() => setIsSidebarOpen(true)} className="md:hidden p-2 -ml-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors rounded-lg active:bg-slate-100 dark:active:bg-slate-800">
                <Menu size={24} />
              </button>
              <div className="hidden md:flex items-center gap-2 text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700/50 transition-colors">
@@ -266,7 +266,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
         </header>
 
         {/* Content Body with View Transition */}
-        <div className="flex-1 overflow-auto p-6 md:p-8 scrollbar-hide">
+        <div className="flex-1 overflow-auto p-4 md:p-8 scrollbar-hide">
            <div className={`max-w-7xl mx-auto min-h-full transition-all duration-500 ease-out ${animatingView ? 'opacity-0 translate-y-4 scale-95 filter blur-sm' : 'opacity-100 translate-y-0 scale-100 filter blur-0'}`}>
               {children}
            </div>

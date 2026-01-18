@@ -49,7 +49,7 @@ const ANIME_SETS = {
 const AVATAR_CATEGORIES = {
   FEATURED: FEATURED_AVATARS,
   ANIME: [], // Placeholder, handled specifically in UI
-  STICKERS: generateAvatars('fun-emoji', 'Sticker', 30, ''),
+  STICKERS: generateAvatars('fun-emoji', 'Sticker', 30, ''), // High resolution stickers
   // Using 'adventurer' for RPG/Fantasy look
   RPG: generateAvatars('adventurer', 'Quest', 24, '&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf&radius=10'),
   // Using 'pixel-art'
